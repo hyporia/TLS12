@@ -1,0 +1,33 @@
+# GoLand-specific
+.idea/
+*.iml
+*.iws
+*.ipr
+*.idea/
+
+# Go specific
+bin/
+pkg/
+*.a
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test coverage
+*.out
+.coverage
+*.cover
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs_vista.db
+
+# Editor backups
+*~
+\#*#
+.*.swp
+.*.swo
