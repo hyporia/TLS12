@@ -3,6 +3,12 @@ package shared
 
 import "fmt"
 
+type MessageType uint16
+
+const (
+	MessageTypeClientHello MessageType = 0x01
+)
+
 type CipherSuite uint16
 
 const (
@@ -60,11 +66,26 @@ func ExtensionTypes() []ExtensionType {
 }
 
 type ProtocolVersion struct {
-	Major uint8 // 0x03 for TLS 1.x
-	Minor uint8 // 0x03 for TLS 1.2
+	major uint8 // 0x03 for TLS 1.x
+	minor uint8 // 0x03 for TLS 1.2
 }
 
-type Extensions struct {
+func Tls12ProtocolVersion() ProtocolVersion {
+	return ProtocolVersion{
+		major: 0x03,
+		minor: 0x03,
+	}
+}
+
+func Major(protocolVersion *ProtocolVersion) uint8 {
+	return protocolVersion.major
+}
+
+func Minor(protocolVersion *ProtocolVersion) uint8 {
+	return protocolVersion.minor
+}
+
+type Extension struct {
 	Type   ExtensionType
 	Opaque []byte
 }
