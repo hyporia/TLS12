@@ -151,6 +151,56 @@ func RawPayload(clientHello *ClientHello) []byte {
 	return payload
 }
 
+func ParseClientHelloFromRawPayload(rawPayload []byte) (*ClientHello, error) {
+	const minClientHelloRawLength = 43
+	if len(rawPayload) < minClientHelloRawLength {
+		return nil, fmt.Errorf("raw payload too short to be a valid ClientHello")
+	}
+
+	protocolVersionStart := 0
+	protocolVersionLength := 2
+	protocolVersionEnd := protocolVersionStart + protocolVersionLength
+	protocolVersion, err := parseProtocolVersionFromRawPayload(rawPayload[protocolVersionStart:protocolVersionEnd])
+	if err != nil {
+		return nil, err
+	}
+
+	randomStart := protocolVersionEnd
+	randomLength := 32
+	randomEnd := randomStart + randomLength
+	random := rawPayload[randomStart:randomEnd]
+
+	sessionIdStart := randomEnd
+	sessionIdLength := rawPayload[randomEnd]
+	sessionIdEnd := sessionIdStart + int(sessionIdLength)
+	sessionId := rawPayload[sessionIdStart:sessionIdEnd]
+
+	cipherSuiteLengthLength := 2
+	cipherSuitesLengthStart := sessionIdEnd
+	cipherSuiteLengthEnd := cipherSuitesLengthStart + cipherSuiteLengthLength
+
+	cipherSuiteLength := binary.BigEndian.Uint16(rawPayload[cipherSuitesLengthStart:cipherSuiteLengthEnd])
+	if cipherSuiteLength == 0 || cipherSuiteLength%2 != 0 {
+		return nil, fmt.Errorf("incorrect length of cipher suites")
+	}
+	cipherSuiteStart := cipherSuiteLengthEnd
+	cipherSuiteEnd := cipherSuiteStart + int(cipherSuiteLength)
+	cipherSuites := make([]CipherSuite, cipherSuiteLength%2)
+	for i := cipherSuiteStart; i < cipherSuiteEnd; i += 2 {
+		cipherSuite := CipherSuite(binary.BigEndian.Uint16(rawPayload[i : i+2]))
+		cipherSuites[(i-cipherSuiteStart)%2] = cipherSuite
+	}
+
+	// todo: finish parsing the rest of the fields
+
+	return &ClientHello{
+		clientVersion: *protocolVersion,
+		random:        random,
+		sessionId:     sessionId,
+		cipherSuites:  cipherSuites,
+	}, nil
+}
+
 func extensionLen(extension Extension) int {
 	return 2 + 2 + len(extension.Opaque) // 2 bytes for type, 2 bytes for length of opaque data, and len for opaque data
 }
