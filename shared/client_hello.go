@@ -109,7 +109,7 @@ func RawPayloadLength(clientHello *ClientHello) int {
 	return version + random + sessionId + cipherSuites + compression + extensions
 }
 
-func RawPayload(clientHello *ClientHello) []byte {
+func MarshallClientHello(clientHello *ClientHello) []byte {
 	payload := []byte{}
 	payload = append(payload, clientHello.clientVersion.major, clientHello.clientVersion.minor)
 
@@ -312,4 +312,31 @@ func copyExtensions(src []Extension) []Extension {
 		}
 	}
 	return dst
+}
+
+func NewTwoBytesLengthOpaque(values []byte) ([]byte, error) {
+	if len(values) > math.MaxUint16 {
+		return nil, fmt.Errorf("opaque with two bytes for length cannot be longer than %v", len(values))
+	}
+
+	if len(values) == 0 {
+		return []byte(nil), nil
+	}
+
+	length := make([]byte, 2)
+	binary.BigEndian.PutUint16(length, uint16(len(values)))
+	return append(length, values...), nil
+}
+
+func NewOneByteLengthOpaque(values []byte) ([]byte, error) {
+	if len(values) > math.MaxUint8 {
+		return nil, fmt.Errorf("opaque with one byte for length cannot be longer than %v", len(values))
+	}
+
+	if len(values) == 0 {
+		return []byte(nil), nil
+	}
+
+	length := []byte{byte(len(values))}
+	return append(length, values...), nil
 }
