@@ -109,7 +109,7 @@ func RawPayloadLength(clientHello *ClientHello) int {
 	return version + random + sessionId + cipherSuites + compression + extensions
 }
 
-func MarshallClientHello(clientHello *ClientHello) []byte {
+func MarshalClientHello(clientHello *ClientHello) []byte {
 	payload := []byte{}
 	payload = append(payload, clientHello.clientVersion.major, clientHello.clientVersion.minor)
 
@@ -151,7 +151,7 @@ func MarshallClientHello(clientHello *ClientHello) []byte {
 	return payload
 }
 
-func UnmarshallClientHello(raw []byte) (*ClientHello, error) {
+func UnmarshalClientHello(raw []byte) (*ClientHello, error) {
 	const minLen = 41
 	if len(raw) < minLen {
 		return nil, fmt.Errorf("raw payload too short to be a valid ClientHello")

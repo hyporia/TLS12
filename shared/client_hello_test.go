@@ -2,6 +2,7 @@
 package shared
 
 import (
+	"bytes"
 	"encoding/binary"
 	"testing"
 	"time"
@@ -73,8 +74,9 @@ func TestCreateClientHello_UnsupportedCipherSuite(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for unsupported cipher suite")
 	}
-	if err.Error() != "unsupported cipher suite: CipherSuite(0x1337)" {
-		t.Errorf("Expected error message 'unsupported cipher suite', got %q", err.Error())
+	expectedErrorMessage := "unsupported cipher suite: CipherSuite(0x1337)"
+	if err.Error() != expectedErrorMessage {
+		t.Errorf("Expected error message '%s', got %q", expectedErrorMessage, err.Error())
 	}
 }
 
@@ -123,7 +125,7 @@ func TestCreateClientHello_UnsupportedExtension(t *testing.T) {
 	}
 }
 
-func TestParseClientHelloFromRawPayload_ValidInput(t *testing.T) {
+func TestUnmarshalClientHello_ValidInput(t *testing.T) {
 	rawPayload := []byte{
 		0x03, 0x03, 0x6f, 0x98, 0x03, 0x8c, 0x08, 0x3e, 0xa1, 0x51, 0x38, 0x1e,
 		0x0f, 0x4b, 0xec, 0xb7, 0x45, 0x0c, 0x52, 0xf5, 0x03, 0x7a, 0x33, 0x39,
@@ -143,7 +145,7 @@ func TestParseClientHelloFromRawPayload_ValidInput(t *testing.T) {
 		0x03, 0x02, 0x01, 0x02, 0x03,
 	}
 
-	clientHello, err := UnmarshallClientHello(rawPayload)
+	clientHello, err := UnmarshalClientHello(rawPayload)
 
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
@@ -153,10 +155,106 @@ func TestParseClientHelloFromRawPayload_ValidInput(t *testing.T) {
 		t.Errorf("Expected TLS 1.2 version(3, 3), got %d.%d", clientHello.clientVersion.major, clientHello.clientVersion.minor)
 	}
 
-	// todo: check other properties
+	expectedRandom := []byte{
+		0x6f, 0x98, 0x03, 0x8c, 0x08, 0x3e, 0xa1, 0x51,
+		0x38, 0x1e, 0x0f, 0x4b, 0xec, 0xb7, 0x45, 0x0c,
+		0x52, 0xf5, 0x03, 0x7a, 0x33, 0x39, 0xd9, 0x67,
+		0xf9, 0x5c, 0x38, 0xba, 0x2a, 0x6a, 0x31, 0x16,
+	}
+	if !bytes.Equal(clientHello.random, expectedRandom) {
+		t.Errorf("Unexpected random: %x", clientHello.random)
+	}
+
+	if len(clientHello.sessionId) != 0 {
+		t.Errorf("Expected empty session ID, got %x", clientHello.sessionId)
+	}
+
+	expectedCipherSuites := []CipherSuite{
+		CipherSuiteECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+		CipherSuiteECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+		CipherSuiteDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+		CipherSuiteECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		CipherSuiteECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+		CipherSuiteECDHE_RSA_WITH_AES_256_CBC_SHA384,
+		CipherSuiteECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
+		CipherSuiteECDHE_RSA_WITH_AES_256_CBC_SHA,
+		CipherSuiteECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+		CipherSuiteDHE_RSA_WITH_AES_256_GCM_SHA384,
+		CipherSuiteDHE_RSA_WITH_AES_256_CBC_SHA256,
+		CipherSuiteDHE_RSA_WITH_AES_256_CBC_SHA,
+		CipherSuiteDraftGOSTR341112_256_WITH_28147_CNT_IMIT,
+		CipherSuiteDHE_RSA_WITH_CAMELLIA_256_CBC_SHA256,
+		CipherSuiteDHE_RSA_WITH_CAMELLIA_256_CBC_SHA,
+		CipherSuiteGOSTR341001_WITH_28147_CNT_IMIT,
+		CipherSuiteRSA_WITH_AES_256_GCM_SHA384,
+		CipherSuiteRSA_WITH_AES_256_CBC_SHA256,
+		CipherSuiteRSA_WITH_AES_256_CBC_SHA,
+		CipherSuiteRSA_WITH_CAMELLIA_256_CBC_SHA256,
+		CipherSuiteDH_anon_WITH_CAMELLIA_128_GCM_SHA256,
+		CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		CipherSuiteECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		CipherSuiteECDHE_RSA_WITH_AES_128_CBC_SHA256,
+		CipherSuiteECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+		CipherSuiteECDHE_RSA_WITH_AES_128_CBC_SHA,
+		CipherSuiteECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+		CipherSuiteDHE_RSA_WITH_AES_128_GCM_SHA256,
+		CipherSuiteDHE_RSA_WITH_AES_128_CBC_SHA256,
+		CipherSuiteDHE_RSA_WITH_AES_128_CBC_SHA,
+		CipherSuiteDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256,
+		CipherSuiteDHE_RSA_WITH_CAMELLIA_128_CBC_SHA,
+		CipherSuiteRSA_WITH_AES_128_GCM_SHA256,
+		CipherSuiteRSA_WITH_AES_128_CBC_SHA256,
+		CipherSuiteRSA_WITH_AES_128_CBC_SHA,
+		CipherSuiteRSA_WITH_CAMELLIA_128_CBC_SHA256,
+		CipherSuiteRSA_WITH_CAMELLIA_128_CBC_SHA,
+		CipherSuiteECDHE_RSA_WITH_RC4_128_SHA,
+		CipherSuiteECDHE_ECDSA_WITH_RC4_128_SHA,
+		CipherSuiteRSA_WITH_RC4_128_SHA,
+		CipherSuiteRSA_WITH_RC4_128_MD5,
+		CipherSuiteECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+		CipherSuiteECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,
+		CipherSuiteDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+		CipherSuiteRSA_WITH_3DES_EDE_CBC_SHA,
+		CipherSuiteEMPTY_RENEGOTIATION_INFO_SCSV,
+	}
+
+	if len(clientHello.cipherSuites) != len(expectedCipherSuites) {
+		t.Fatalf("Expected %d cipher suites, got %d", len(expectedCipherSuites), len(clientHello.cipherSuites))
+	}
+
+	for i, suite := range expectedCipherSuites {
+		if clientHello.cipherSuites[i] != suite {
+			t.Fatalf("Cipher suite mismatch at position %d: expected %v, got %v", i, suite, clientHello.cipherSuites[i])
+		}
+	}
+
+	if len(clientHello.compression) != 1 || clientHello.compression[0] != 0x00 {
+		t.Errorf("Expected only null compression, got %x", clientHello.compression)
+	}
+
+	expectedExtensions := []Extension{
+		{Type: ExtensionTypeECPointFormats, Opaque: []byte{0x01, 0x00}},
+		{Type: ExtensionTypeSupportedGroups, Opaque: []byte{0x00, 0x08, 0x00, 0x1d, 0x00, 0x17, 0x00, 0x18, 0x00, 0x19}},
+		{Type: ExtensionTypeSessionTicket, Opaque: nil},
+		{Type: ExtensionTypeSignatureAlgorithms, Opaque: []byte{0x00, 0x16, 0x08, 0x06, 0x06, 0x01, 0x06, 0x03, 0x08, 0x05, 0x05, 0x01, 0x05, 0x03, 0x08, 0x04, 0x04, 0x01, 0x04, 0x03, 0x02, 0x01, 0x02, 0x03}},
+	}
+
+	if len(clientHello.extensions) != len(expectedExtensions) {
+		t.Fatalf("Expected %d extensions, got %d", len(expectedExtensions), len(clientHello.extensions))
+	}
+
+	for i, ext := range expectedExtensions {
+		got := clientHello.extensions[i]
+		if got.Type != ext.Type {
+			t.Fatalf("Extension type mismatch at index %d: expected %v, got %v", i, ext.Type, got.Type)
+		}
+		if !bytes.Equal(got.Opaque, ext.Opaque) {
+			t.Fatalf("Extension opaque mismatch at index %d: expected %x, got %x", i, ext.Opaque, got.Opaque)
+		}
+	}
 }
 
-func TestMarshallClientHelloToRawPayload_ValidInput(t *testing.T) {
+func TestMarshalClientHello_ValidInput(t *testing.T) {
 
 	random := []byte{
 		0x6f, 0x98, 0x03, 0x8c, 0x08, 0x3e, 0xa1, 0x51, 0x38, 0x1e, 0x0f, 0x4b,
@@ -204,7 +302,7 @@ func TestMarshallClientHelloToRawPayload_ValidInput(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	rawClientHello := MarshallClientHello(clientHello)
+	rawClientHello := MarshalClientHello(clientHello)
 
 	expectedRawClientHello := []byte{
 		0x03, 0x03, 0x6f, 0x98, 0x03, 0x8c, 0x08, 0x3e, 0xa1, 0x51, 0x38, 0x1e,
