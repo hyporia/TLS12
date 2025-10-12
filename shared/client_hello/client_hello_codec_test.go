@@ -1,131 +1,12 @@
-// File: shared/client_hello_test.go
-package shared
+package client_hello
 
 import (
 	"bytes"
 	"encoding/binary"
 	"testing"
-	"time"
 
 	"github.com/piligrimm/tls/shared/spec"
 )
-
-func TestCreateClientHello_ValidInput(t *testing.T) {
-	// Arrange
-	random := make([]byte, 32)
-	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix())) // Valid timestamp
-	sessionId := []byte{0x01, 0x02}
-	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
-	extensions := []Extension{}
-
-	// Act
-	clientHello, err := NewClientHello(random, sessionId, cipherSuites, extensions)
-
-	// Assert
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
-	}
-	if clientHello == nil {
-		t.Fatal("Expected non-nil ClientHello")
-	}
-	if len(clientHello.random) != 32 {
-		t.Errorf("Expected random to be 32 bytes, got %d", len(clientHello.random))
-	}
-	if len(clientHello.sessionId) != 2 {
-		t.Errorf("Expected session ID to be 2 bytes, got %d", len(clientHello.sessionId))
-	}
-	if len(clientHello.cipherSuites) != 1 {
-		t.Errorf("Expected 1 cipher suite, got %d", len(clientHello.cipherSuites))
-	}
-	if len(clientHello.extensions) != 0 {
-		t.Errorf("Expected no extensions, got %d", len(clientHello.extensions))
-	}
-}
-
-func TestCreateClientHello_InvalidRandomLength(t *testing.T) {
-	// Arrange
-	random := make([]byte, 31) // Too short
-	sessionId := []byte{}
-	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_CBC_SHA}
-	extensions := []Extension{}
-
-	// Act
-	_, err := NewClientHello(random, sessionId, cipherSuites, extensions)
-
-	// Assert
-	if err == nil {
-		t.Fatal("Expected error for invalid random length")
-	}
-	if err.Error() != "random must contain 32 bytes" {
-		t.Errorf("Expected error message 'random must contain 32 bytes', got %q", err.Error())
-	}
-}
-
-func TestCreateClientHello_UnsupportedCipherSuite(t *testing.T) {
-	// Arrange
-	random := make([]byte, 32)
-	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix()))
-	sessionId := []byte{}
-	cipherSuites := []spec.CipherSuite{spec.CipherSuite(0x1337)} // Invalid
-	extensions := []Extension{}
-
-	// Act
-	_, err := NewClientHello(random, sessionId, cipherSuites, extensions)
-
-	// Assert
-	if err == nil {
-		t.Fatal("Expected error for unsupported cipher suite")
-	}
-	expectedErrorMessage := "unsupported cipher suite: CipherSuite(0x1337)"
-	if err.Error() != expectedErrorMessage {
-		t.Errorf("Expected error message '%s', got %q", expectedErrorMessage, err.Error())
-	}
-}
-
-func TestCreateClientHello_DuplicateExtension(t *testing.T) {
-	// Arrange
-	random := make([]byte, 32)
-	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix()))
-	sessionId := []byte{}
-	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
-	extensions := []Extension{
-		{Type: spec.ExtensionTypeServerName, Opaque: []byte{}},
-		{Type: spec.ExtensionTypeServerName, Opaque: []byte{}}, // Duplicate
-	}
-
-	// Act
-	_, err := NewClientHello(random, sessionId, cipherSuites, extensions)
-
-	// Assert
-	if err == nil {
-		t.Fatal("Expected error for duplicate extension")
-	}
-	if err.Error() != "duplicate extension: ServerName" {
-		t.Errorf("Expected error message 'duplicate extension: ServerName', got %q", err.Error())
-	}
-}
-
-func TestCreateClientHello_UnsupportedExtension(t *testing.T) {
-	// Arrange
-	random := make([]byte, 32)
-	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix()))
-	sessionId := []byte{}
-	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
-	extensions := []Extension{
-		{Type: spec.ExtensionType(0x1337), Opaque: []byte{}}, // Unknown type
-	}
-
-	// Act
-	_, err := NewClientHello(random, sessionId, cipherSuites, extensions)
-
-	// Assert
-	if err == nil {
-		t.Fatal("Expected error for unsupported extension")
-	}
-	if err.Error() != "unsupported extension ExtensionType(0x1337)" {
-		t.Errorf("Expected error message 'unsupported extension 0x1337', got %q", err.Error())
-	}
-}
 
 func TestUnmarshalClientHello_ValidInput(t *testing.T) {
 	rawPayload := []byte{
@@ -153,8 +34,9 @@ func TestUnmarshalClientHello_ValidInput(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	if clientHello.clientVersion.major != Tls12ProtocolVersion().major || clientHello.clientVersion.minor != Tls12ProtocolVersion().minor {
-		t.Errorf("Expected TLS 1.2 version(3, 3), got %d.%d", clientHello.clientVersion.major, clientHello.clientVersion.minor)
+	tls12ProtocolVersion := spec.Tls12ProtocolVersion()
+	if clientHello.ClientVersion.Major != tls12ProtocolVersion.Major || clientHello.ClientVersion.Minor != tls12ProtocolVersion.Minor {
+		t.Errorf("Expected TLS 1.2 version(3, 3), got %d.%d", clientHello.ClientVersion.Major, clientHello.ClientVersion.Minor)
 	}
 
 	expectedRandom := []byte{
@@ -163,12 +45,12 @@ func TestUnmarshalClientHello_ValidInput(t *testing.T) {
 		0x52, 0xf5, 0x03, 0x7a, 0x33, 0x39, 0xd9, 0x67,
 		0xf9, 0x5c, 0x38, 0xba, 0x2a, 0x6a, 0x31, 0x16,
 	}
-	if !bytes.Equal(clientHello.random, expectedRandom) {
-		t.Errorf("Unexpected random: %x", clientHello.random)
+	if !bytes.Equal(clientHello.Random, expectedRandom) {
+		t.Errorf("Unexpected random: %x", clientHello.Random)
 	}
 
-	if len(clientHello.sessionId) != 0 {
-		t.Errorf("Expected empty session ID, got %x", clientHello.sessionId)
+	if len(clientHello.SessionID) != 0 {
+		t.Errorf("Expected empty session ID, got %x", clientHello.SessionID)
 	}
 
 	expectedCipherSuites := []spec.CipherSuite{
@@ -220,39 +102,39 @@ func TestUnmarshalClientHello_ValidInput(t *testing.T) {
 		spec.CipherSuiteEMPTY_RENEGOTIATION_INFO_SCSV,
 	}
 
-	if len(clientHello.cipherSuites) != len(expectedCipherSuites) {
-		t.Fatalf("Expected %d cipher suites, got %d", len(expectedCipherSuites), len(clientHello.cipherSuites))
+	if len(clientHello.CipherSuites) != len(expectedCipherSuites) {
+		t.Fatalf("Expected %d cipher suites, got %d", len(expectedCipherSuites), len(clientHello.CipherSuites))
 	}
 
 	for i, suite := range expectedCipherSuites {
-		if clientHello.cipherSuites[i] != suite {
-			t.Fatalf("Cipher suite mismatch at position %d: expected %v, got %v", i, suite, clientHello.cipherSuites[i])
+		if clientHello.CipherSuites[i] != suite {
+			t.Fatalf("Cipher suite mismatch at position %d: expected %v, got %v", i, suite, clientHello.CipherSuites[i])
 		}
 	}
 
-	if len(clientHello.compression) != 1 || clientHello.compression[0] != 0x00 {
-		t.Errorf("Expected only null compression, got %x", clientHello.compression)
+	if len(clientHello.Compression) != 1 || clientHello.Compression[0] != 0x00 {
+		t.Errorf("Expected only null compression, got %x", clientHello.Compression)
 	}
 
 	pointFormatsValues := []byte{byte(spec.ECPointFormatUncompressed)}
-	pointFormats, _ := NewOneByteLengthOpaque(pointFormatsValues)
+	pointFormats, _ := NewOpaqueVector8(pointFormatsValues)
 
 	supportedGroups := []byte{0x00, 0x08, 0x00, 0x1d, 0x00, 0x17, 0x00, 0x18, 0x00, 0x19}
 	signatureAlgorithms := []byte{0x00, 0x16, 0x08, 0x06, 0x06, 0x01, 0x06, 0x03, 0x08, 0x05, 0x05, 0x01, 0x05, 0x03, 0x08, 0x04, 0x04, 0x01, 0x04, 0x03, 0x02, 0x01, 0x02, 0x03}
 
-	expectedExtensions := []Extension{
+	expectedExtensions := []spec.Extension{
 		{Type: spec.ExtensionTypeECPointFormats, Opaque: pointFormats},
 		{Type: spec.ExtensionTypeSupportedGroups, Opaque: supportedGroups},
 		{Type: spec.ExtensionTypeSessionTicket, Opaque: nil},
 		{Type: spec.ExtensionTypeSignatureAlgorithms, Opaque: signatureAlgorithms},
 	}
 
-	if len(clientHello.extensions) != len(expectedExtensions) {
-		t.Fatalf("Expected %d extensions, got %d", len(expectedExtensions), len(clientHello.extensions))
+	if len(clientHello.Extensions) != len(expectedExtensions) {
+		t.Fatalf("Expected %d extensions, got %d", len(expectedExtensions), len(clientHello.Extensions))
 	}
 
 	for i, ext := range expectedExtensions {
-		got := clientHello.extensions[i]
+		got := clientHello.Extensions[i]
 		if got.Type != ext.Type {
 			t.Fatalf("Extension type mismatch at index %d: expected %v, got %v", i, ext.Type, got.Type)
 		}
@@ -275,17 +157,17 @@ func TestMarshalClientHello_ValidInput(t *testing.T) {
 	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
 
 	pointFormatsValues := []byte{byte(spec.ECPointFormatUncompressed)}
-	pointFormats, _ := NewOneByteLengthOpaque(pointFormatsValues)
+	pointFormats, _ := NewOpaqueVector8(pointFormatsValues)
 
 	supportedGroupsValues := make([]byte, 2)
 	binary.BigEndian.PutUint16(supportedGroupsValues, uint16(spec.SupportedGroupsSecp256r1))
-	supportedGroups, _ := NewTwoBytesLengthOpaque(supportedGroupsValues)
+	supportedGroups, _ := NewOpaqueVector16(supportedGroupsValues)
 
 	supportedSignatureAlgorithmsValues := make([]byte, 2)
 	binary.BigEndian.PutUint16(supportedSignatureAlgorithmsValues, uint16(spec.SignatureAlgorithmRsaPkcs1Sha256))
-	supportedSignatureAlgorithms, _ := NewTwoBytesLengthOpaque(supportedSignatureAlgorithmsValues)
+	supportedSignatureAlgorithms, _ := NewOpaqueVector16(supportedSignatureAlgorithmsValues)
 
-	extensions := []Extension{
+	extensions := []spec.Extension{
 		{
 			Type:   spec.ExtensionTypeECPointFormats,
 			Opaque: pointFormats,
