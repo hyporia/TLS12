@@ -6,6 +6,8 @@ import (
 	"encoding/binary"
 	"testing"
 	"time"
+
+	"github.com/piligrimm/tls/shared/spec"
 )
 
 func TestCreateClientHello_ValidInput(t *testing.T) {
@@ -13,7 +15,7 @@ func TestCreateClientHello_ValidInput(t *testing.T) {
 	random := make([]byte, 32)
 	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix())) // Valid timestamp
 	sessionId := []byte{0x01, 0x02}
-	cipherSuites := []CipherSuite{CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
+	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
 	extensions := []Extension{}
 
 	// Act
@@ -44,7 +46,7 @@ func TestCreateClientHello_InvalidRandomLength(t *testing.T) {
 	// Arrange
 	random := make([]byte, 31) // Too short
 	sessionId := []byte{}
-	cipherSuites := []CipherSuite{CipherSuiteECDHE_RSA_WITH_AES_128_CBC_SHA}
+	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_CBC_SHA}
 	extensions := []Extension{}
 
 	// Act
@@ -64,7 +66,7 @@ func TestCreateClientHello_UnsupportedCipherSuite(t *testing.T) {
 	random := make([]byte, 32)
 	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix()))
 	sessionId := []byte{}
-	cipherSuites := []CipherSuite{CipherSuite(0x1337)} // Invalid
+	cipherSuites := []spec.CipherSuite{spec.CipherSuite(0x1337)} // Invalid
 	extensions := []Extension{}
 
 	// Act
@@ -85,10 +87,10 @@ func TestCreateClientHello_DuplicateExtension(t *testing.T) {
 	random := make([]byte, 32)
 	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix()))
 	sessionId := []byte{}
-	cipherSuites := []CipherSuite{CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
+	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
 	extensions := []Extension{
-		{Type: ExtensionTypeServerName, Opaque: []byte{}},
-		{Type: ExtensionTypeServerName, Opaque: []byte{}}, // Duplicate
+		{Type: spec.ExtensionTypeServerName, Opaque: []byte{}},
+		{Type: spec.ExtensionTypeServerName, Opaque: []byte{}}, // Duplicate
 	}
 
 	// Act
@@ -108,9 +110,9 @@ func TestCreateClientHello_UnsupportedExtension(t *testing.T) {
 	random := make([]byte, 32)
 	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix()))
 	sessionId := []byte{}
-	cipherSuites := []CipherSuite{CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
+	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
 	extensions := []Extension{
-		{Type: ExtensionType(0x1337), Opaque: []byte{}}, // Unknown type
+		{Type: spec.ExtensionType(0x1337), Opaque: []byte{}}, // Unknown type
 	}
 
 	// Act
@@ -169,53 +171,53 @@ func TestUnmarshalClientHello_ValidInput(t *testing.T) {
 		t.Errorf("Expected empty session ID, got %x", clientHello.sessionId)
 	}
 
-	expectedCipherSuites := []CipherSuite{
-		CipherSuiteECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
-		CipherSuiteECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
-		CipherSuiteDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
-		CipherSuiteECDHE_RSA_WITH_AES_256_GCM_SHA384,
-		CipherSuiteECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-		CipherSuiteECDHE_RSA_WITH_AES_256_CBC_SHA384,
-		CipherSuiteECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
-		CipherSuiteECDHE_RSA_WITH_AES_256_CBC_SHA,
-		CipherSuiteECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-		CipherSuiteDHE_RSA_WITH_AES_256_GCM_SHA384,
-		CipherSuiteDHE_RSA_WITH_AES_256_CBC_SHA256,
-		CipherSuiteDHE_RSA_WITH_AES_256_CBC_SHA,
-		CipherSuiteDraftGOSTR341112_256_WITH_28147_CNT_IMIT,
-		CipherSuiteDHE_RSA_WITH_CAMELLIA_256_CBC_SHA256,
-		CipherSuiteDHE_RSA_WITH_CAMELLIA_256_CBC_SHA,
-		CipherSuiteGOSTR341001_WITH_28147_CNT_IMIT,
-		CipherSuiteRSA_WITH_AES_256_GCM_SHA384,
-		CipherSuiteRSA_WITH_AES_256_CBC_SHA256,
-		CipherSuiteRSA_WITH_AES_256_CBC_SHA,
-		CipherSuiteRSA_WITH_CAMELLIA_256_CBC_SHA256,
-		CipherSuiteDH_anon_WITH_CAMELLIA_128_GCM_SHA256,
-		CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256,
-		CipherSuiteECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-		CipherSuiteECDHE_RSA_WITH_AES_128_CBC_SHA256,
-		CipherSuiteECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
-		CipherSuiteECDHE_RSA_WITH_AES_128_CBC_SHA,
-		CipherSuiteECDHE_ECDSA_WITH_AES_128_CBC_SHA,
-		CipherSuiteDHE_RSA_WITH_AES_128_GCM_SHA256,
-		CipherSuiteDHE_RSA_WITH_AES_128_CBC_SHA256,
-		CipherSuiteDHE_RSA_WITH_AES_128_CBC_SHA,
-		CipherSuiteDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256,
-		CipherSuiteDHE_RSA_WITH_CAMELLIA_128_CBC_SHA,
-		CipherSuiteRSA_WITH_AES_128_GCM_SHA256,
-		CipherSuiteRSA_WITH_AES_128_CBC_SHA256,
-		CipherSuiteRSA_WITH_AES_128_CBC_SHA,
-		CipherSuiteRSA_WITH_CAMELLIA_128_CBC_SHA256,
-		CipherSuiteRSA_WITH_CAMELLIA_128_CBC_SHA,
-		CipherSuiteECDHE_RSA_WITH_RC4_128_SHA,
-		CipherSuiteECDHE_ECDSA_WITH_RC4_128_SHA,
-		CipherSuiteRSA_WITH_RC4_128_SHA,
-		CipherSuiteRSA_WITH_RC4_128_MD5,
-		CipherSuiteECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-		CipherSuiteECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,
-		CipherSuiteDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-		CipherSuiteRSA_WITH_3DES_EDE_CBC_SHA,
-		CipherSuiteEMPTY_RENEGOTIATION_INFO_SCSV,
+	expectedCipherSuites := []spec.CipherSuite{
+		spec.CipherSuiteECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+		spec.CipherSuiteECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+		spec.CipherSuiteDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+		spec.CipherSuiteECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		spec.CipherSuiteECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+		spec.CipherSuiteECDHE_RSA_WITH_AES_256_CBC_SHA384,
+		spec.CipherSuiteECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
+		spec.CipherSuiteECDHE_RSA_WITH_AES_256_CBC_SHA,
+		spec.CipherSuiteECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+		spec.CipherSuiteDHE_RSA_WITH_AES_256_GCM_SHA384,
+		spec.CipherSuiteDHE_RSA_WITH_AES_256_CBC_SHA256,
+		spec.CipherSuiteDHE_RSA_WITH_AES_256_CBC_SHA,
+		spec.CipherSuiteDraftGOSTR341112_256_WITH_28147_CNT_IMIT,
+		spec.CipherSuiteDHE_RSA_WITH_CAMELLIA_256_CBC_SHA256,
+		spec.CipherSuiteDHE_RSA_WITH_CAMELLIA_256_CBC_SHA,
+		spec.CipherSuiteGOSTR341001_WITH_28147_CNT_IMIT,
+		spec.CipherSuiteRSA_WITH_AES_256_GCM_SHA384,
+		spec.CipherSuiteRSA_WITH_AES_256_CBC_SHA256,
+		spec.CipherSuiteRSA_WITH_AES_256_CBC_SHA,
+		spec.CipherSuiteRSA_WITH_CAMELLIA_256_CBC_SHA256,
+		spec.CipherSuiteDH_anon_WITH_CAMELLIA_128_GCM_SHA256,
+		spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		spec.CipherSuiteECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		spec.CipherSuiteECDHE_RSA_WITH_AES_128_CBC_SHA256,
+		spec.CipherSuiteECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+		spec.CipherSuiteECDHE_RSA_WITH_AES_128_CBC_SHA,
+		spec.CipherSuiteECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+		spec.CipherSuiteDHE_RSA_WITH_AES_128_GCM_SHA256,
+		spec.CipherSuiteDHE_RSA_WITH_AES_128_CBC_SHA256,
+		spec.CipherSuiteDHE_RSA_WITH_AES_128_CBC_SHA,
+		spec.CipherSuiteDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256,
+		spec.CipherSuiteDHE_RSA_WITH_CAMELLIA_128_CBC_SHA,
+		spec.CipherSuiteRSA_WITH_AES_128_GCM_SHA256,
+		spec.CipherSuiteRSA_WITH_AES_128_CBC_SHA256,
+		spec.CipherSuiteRSA_WITH_AES_128_CBC_SHA,
+		spec.CipherSuiteRSA_WITH_CAMELLIA_128_CBC_SHA256,
+		spec.CipherSuiteRSA_WITH_CAMELLIA_128_CBC_SHA,
+		spec.CipherSuiteECDHE_RSA_WITH_RC4_128_SHA,
+		spec.CipherSuiteECDHE_ECDSA_WITH_RC4_128_SHA,
+		spec.CipherSuiteRSA_WITH_RC4_128_SHA,
+		spec.CipherSuiteRSA_WITH_RC4_128_MD5,
+		spec.CipherSuiteECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+		spec.CipherSuiteECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,
+		spec.CipherSuiteDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+		spec.CipherSuiteRSA_WITH_3DES_EDE_CBC_SHA,
+		spec.CipherSuiteEMPTY_RENEGOTIATION_INFO_SCSV,
 	}
 
 	if len(clientHello.cipherSuites) != len(expectedCipherSuites) {
@@ -232,17 +234,17 @@ func TestUnmarshalClientHello_ValidInput(t *testing.T) {
 		t.Errorf("Expected only null compression, got %x", clientHello.compression)
 	}
 
-	pointFormatsValues := []byte{byte(ECPointFormatUncompressed)}
+	pointFormatsValues := []byte{byte(spec.ECPointFormatUncompressed)}
 	pointFormats, _ := NewOneByteLengthOpaque(pointFormatsValues)
 
 	supportedGroups := []byte{0x00, 0x08, 0x00, 0x1d, 0x00, 0x17, 0x00, 0x18, 0x00, 0x19}
 	signatureAlgorithms := []byte{0x00, 0x16, 0x08, 0x06, 0x06, 0x01, 0x06, 0x03, 0x08, 0x05, 0x05, 0x01, 0x05, 0x03, 0x08, 0x04, 0x04, 0x01, 0x04, 0x03, 0x02, 0x01, 0x02, 0x03}
 
 	expectedExtensions := []Extension{
-		{Type: ExtensionTypeECPointFormats, Opaque: pointFormats},
-		{Type: ExtensionTypeSupportedGroups, Opaque: supportedGroups},
-		{Type: ExtensionTypeSessionTicket, Opaque: nil},
-		{Type: ExtensionTypeSignatureAlgorithms, Opaque: signatureAlgorithms},
+		{Type: spec.ExtensionTypeECPointFormats, Opaque: pointFormats},
+		{Type: spec.ExtensionTypeSupportedGroups, Opaque: supportedGroups},
+		{Type: spec.ExtensionTypeSessionTicket, Opaque: nil},
+		{Type: spec.ExtensionTypeSignatureAlgorithms, Opaque: signatureAlgorithms},
 	}
 
 	if len(clientHello.extensions) != len(expectedExtensions) {
@@ -270,34 +272,34 @@ func TestMarshalClientHello_ValidInput(t *testing.T) {
 
 	sessionId := []byte(nil)
 
-	cipherSuites := []CipherSuite{CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
+	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
 
-	pointFormatsValues := []byte{byte(ECPointFormatUncompressed)}
+	pointFormatsValues := []byte{byte(spec.ECPointFormatUncompressed)}
 	pointFormats, _ := NewOneByteLengthOpaque(pointFormatsValues)
 
 	supportedGroupsValues := make([]byte, 2)
-	binary.BigEndian.PutUint16(supportedGroupsValues, uint16(SupportedGroupsSecp256r1))
+	binary.BigEndian.PutUint16(supportedGroupsValues, uint16(spec.SupportedGroupsSecp256r1))
 	supportedGroups, _ := NewTwoBytesLengthOpaque(supportedGroupsValues)
 
 	supportedSignatureAlgorithmsValues := make([]byte, 2)
-	binary.BigEndian.PutUint16(supportedSignatureAlgorithmsValues, uint16(SignatureAlgorithmRsaPkcs1Sha256))
+	binary.BigEndian.PutUint16(supportedSignatureAlgorithmsValues, uint16(spec.SignatureAlgorithmRsaPkcs1Sha256))
 	supportedSignatureAlgorithms, _ := NewTwoBytesLengthOpaque(supportedSignatureAlgorithmsValues)
 
 	extensions := []Extension{
 		{
-			Type:   ExtensionTypeECPointFormats,
+			Type:   spec.ExtensionTypeECPointFormats,
 			Opaque: pointFormats,
 		},
 		{
-			Type:   ExtensionTypeSupportedGroups,
+			Type:   spec.ExtensionTypeSupportedGroups,
 			Opaque: supportedGroups,
 		},
 		{
-			Type:   ExtensionTypeSessionTicket,
+			Type:   spec.ExtensionTypeSessionTicket,
 			Opaque: []byte(nil),
 		},
 		{
-			Type:   ExtensionTypeSignatureAlgorithms,
+			Type:   spec.ExtensionTypeSignatureAlgorithms,
 			Opaque: supportedSignatureAlgorithms,
 		},
 	}

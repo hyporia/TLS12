@@ -1,6 +1,8 @@
-package shared
+package spec
 
 import "fmt"
+
+type CipherSuite uint16
 
 const (
 	CipherSuiteEMPTY_RENEGOTIATION_INFO_SCSV CipherSuite = 0x00ff
@@ -60,7 +62,6 @@ const (
 	CipherSuiteRSA_WITH_3DES_EDE_CBC_SHA            CipherSuite = 0x000a
 )
 
-// Returns a slice of all supported cipher suites
 func SupportedCipherSuites() []CipherSuite {
 	return []CipherSuite{
 		CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256,
@@ -105,7 +106,6 @@ func (c CipherSuite) String() string {
 		return "TLS_GOSTR341112_256_WITH_28147_CNT_IMIT"
 	case CipherSuiteDraftGOSTR341112_256_WITH_28147_CNT_IMIT:
 		return "TLS_DRAFT_GOSTR341112_256_WITH_28147_CNT_IMIT"
-
 	default:
 		return fmt.Sprintf("CipherSuite(0x%04x)", uint16(c))
 	}

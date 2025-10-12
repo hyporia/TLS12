@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"math"
 	"slices"
+
+	"github.com/piligrimm/tls/shared/spec"
 )
 
-type CipherSuite uint16
-
 type Extension struct {
-	Type   ExtensionType
+	Type   spec.ExtensionType
 	Opaque []byte
 }
 
@@ -27,7 +27,7 @@ type ClientHello struct {
 
 	sessionId []byte
 
-	cipherSuites []CipherSuite
+	cipherSuites []spec.CipherSuite
 
 	compression []byte
 
@@ -37,7 +37,7 @@ type ClientHello struct {
 func NewClientHello(
 	random []byte,
 	sessionId []byte,
-	cipherSuites []CipherSuite,
+	cipherSuites []spec.CipherSuite,
 	extensions []Extension,
 ) (*ClientHello, error) {
 	if len(random) != 32 {
@@ -55,8 +55,8 @@ func NewClientHello(
 	if len(cipherSuites) == 0 {
 		return nil, errors.New("at least one cipher suite is required")
 	}
-	seenCipherSuites := make(map[CipherSuite]bool)
-	supportedCipherSuites := SupportedCipherSuites()
+	seenCipherSuites := make(map[spec.CipherSuite]bool)
+	supportedCipherSuites := spec.SupportedCipherSuites()
 	for _, cipherSuite := range cipherSuites {
 		if !slices.Contains(supportedCipherSuites, cipherSuite) {
 			return nil, fmt.Errorf("unsupported cipher suite: %v", cipherSuite)
@@ -75,8 +75,8 @@ func NewClientHello(
 	if extensionsSum > math.MaxUint16 {
 		return nil, fmt.Errorf("raw extensions cannot exceed %v bytes", math.MaxUint16)
 	}
-	seenExtensionTypes := make(map[ExtensionType]bool)
-	possibleExtensions := ExtensionTypes()
+	seenExtensionTypes := make(map[spec.ExtensionType]bool)
+	possibleExtensions := spec.ExtensionTypes()
 	for _, extension := range extensions {
 		if !slices.Contains(possibleExtensions, extension.Type) {
 			return nil, fmt.Errorf("unsupported extension %v", extension.Type)
@@ -206,9 +206,9 @@ func UnmarshalClientHello(raw []byte) (*ClientHello, error) {
 		return nil, err
 	}
 	numSuites := csLen / 2
-	cipherSuites := make([]CipherSuite, numSuites)
+	cipherSuites := make([]spec.CipherSuite, numSuites)
 	for i := 0; i < numSuites; i++ {
-		cipherSuites[i] = CipherSuite(binary.BigEndian.Uint16(raw[off+2*i : off+2*i+2]))
+		cipherSuites[i] = spec.CipherSuite(binary.BigEndian.Uint16(raw[off+2*i : off+2*i+2]))
 	}
 	off += csLen
 
@@ -256,7 +256,7 @@ func UnmarshalClientHello(raw []byte) (*ClientHello, error) {
 			if endExt-off < 4 {
 				return nil, fmt.Errorf("truncated extension header at offset %d", off)
 			}
-			extType := ExtensionType(binary.BigEndian.Uint16(raw[off : off+2]))
+			extType := spec.ExtensionType(binary.BigEndian.Uint16(raw[off : off+2]))
 			opaqueLen := int(binary.BigEndian.Uint16(raw[off+2 : off+4]))
 			off += 4
 			if endExt-off < opaqueLen {
@@ -292,7 +292,7 @@ func extensionsLen(extensions []Extension) int {
 	return extensionsSum
 }
 
-func copySlice[T byte | CipherSuite](src []T) []T {
+func copySlice[T ~byte | spec.CipherSuite](src []T) []T {
 	dst := make([]T, len(src))
 	copy(dst, src)
 	return dst

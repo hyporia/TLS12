@@ -1,4 +1,4 @@
-package shared
+package spec
 
 type SupportedGroup uint16
 
