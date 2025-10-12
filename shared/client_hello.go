@@ -93,22 +93,6 @@ func NewClientHello(
 	}, nil
 }
 
-func RawPayloadLength(clientHello *ClientHello) int {
-	version := 2
-	random := 32
-	sessionId := 1 + len(clientHello.sessionId)
-	cipherSuites := 2 + 2*len(clientHello.cipherSuites)
-	compression := 1 + 1 // 1 length + 1 byte for compression method
-
-	extensionsLen := extensionsLen(clientHello.extensions)
-	extensions := 0
-	if extensionsLen > 0 {
-		extensions = 2 + extensionsLen
-	}
-
-	return version + random + sessionId + cipherSuites + compression + extensions
-}
-
 func MarshalClientHello(clientHello *ClientHello) []byte {
 	payload := []byte{}
 	payload = append(payload, clientHello.clientVersion.major, clientHello.clientVersion.minor)
