@@ -8,6 +8,18 @@ import (
 	"slices"
 )
 
+type CipherSuite uint16
+
+type Extension struct {
+	Type   ExtensionType
+	Opaque []byte
+}
+
+type ProtocolVersion struct {
+	major uint8 // 0x03 for TLS 1.x
+	minor uint8 // 0x03 for TLS 1.2
+}
+
 type ClientHello struct {
 	clientVersion ProtocolVersion
 
@@ -85,9 +97,9 @@ func NewClientHello(
 
 	return &ClientHello{
 		clientVersion: Tls12ProtocolVersion(),
-		random:        copyInternal(random),
-		sessionId:     copyInternal(sessionId),
-		cipherSuites:  copyInternal(cipherSuites),
+		random:        copySlice(random),
+		sessionId:     copySlice(sessionId),
+		cipherSuites:  copySlice(cipherSuites),
 		compression:   compression,
 		extensions:    copyExtensions(extensions), // todo: sort extensions
 	}, nil
@@ -268,7 +280,7 @@ func UnmarshalClientHello(raw []byte) (*ClientHello, error) {
 }
 
 func extensionLen(extension Extension) int {
-	return 2 + 2 + len(extension.Opaque) // 2 bytes for type, 2 bytes for length of opaque data, and len for opaque data
+	return 2 + 2 + len(extension.Opaque)
 }
 
 func extensionsLen(extensions []Extension) int {
@@ -280,7 +292,7 @@ func extensionsLen(extensions []Extension) int {
 	return extensionsSum
 }
 
-func copyInternal[T byte | CipherSuite](src []T) []T {
+func copySlice[T byte | CipherSuite](src []T) []T {
 	dst := make([]T, len(src))
 	copy(dst, src)
 	return dst
@@ -289,12 +301,23 @@ func copyInternal[T byte | CipherSuite](src []T) []T {
 func copyExtensions(src []Extension) []Extension {
 	dst := make([]Extension, len(src))
 	for i, extSrc := range src {
-		opaque := copyInternal(extSrc.Opaque)
+		opaque := copySlice(extSrc.Opaque)
 		dst[i] = Extension{
 			Type:   extSrc.Type,
 			Opaque: opaque,
 		}
 	}
+
+	slices.SortFunc(dst, func(a, b Extension) int {
+		switch {
+		case a.Type < b.Type:
+			return -1
+		case a.Type > b.Type:
+			return 1
+		default:
+			return 0
+		}
+	})
 	return dst
 }
 

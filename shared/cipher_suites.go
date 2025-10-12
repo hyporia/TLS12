@@ -2,9 +2,6 @@ package shared
 
 import "fmt"
 
-// CipherSuite represents a TLS cipher suite
-type CipherSuite uint16
-
 const (
 	CipherSuiteEMPTY_RENEGOTIATION_INFO_SCSV CipherSuite = 0x00ff
 
