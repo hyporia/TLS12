@@ -1,4 +1,4 @@
-package client_hello
+package server_hello
 
 import (
 	"errors"
@@ -10,12 +10,12 @@ import (
 	"github.com/piligrimm/tls/shared/utils"
 )
 
-func NewClientHello(
+func NewServerHello(
 	random []byte,
 	sessionId []byte,
-	cipherSuites []spec.CipherSuite,
+	cipherSuite spec.CipherSuite,
 	extensions []spec.Extension,
-) (*spec.ClientHello, error) {
+) (*spec.ServerHello, error) {
 	if len(random) != 32 {
 		return nil, errors.New("random must contain 32 bytes")
 	}
@@ -24,30 +24,17 @@ func NewClientHello(
 		return nil, errors.New("session ID cannot be longer than 32 bytes")
 	}
 
-	if 2*len(cipherSuites) > math.MaxUint16 {
-		return nil, fmt.Errorf("raw cipher suites cannot exceed %v bytes", math.MaxUint16)
-	}
-
-	if len(cipherSuites) == 0 {
-		return nil, errors.New("at least one cipher suite is required")
-	}
-	seenCipherSuites := make(map[spec.CipherSuite]bool)
+	// todo: move this check to the client side
 	supportedCipherSuites := spec.SupportedCipherSuites()
-	for _, cipherSuite := range cipherSuites {
-		if !slices.Contains(supportedCipherSuites, cipherSuite) {
-			return nil, fmt.Errorf("unsupported cipher suite: %v", cipherSuite)
-		}
-
-		if seenCipherSuites[cipherSuite] {
-			return nil, fmt.Errorf("duplicate cipher suite: %v", cipherSuite)
-		}
-		seenCipherSuites[cipherSuite] = true
+	if !slices.Contains(supportedCipherSuites, cipherSuite) {
+		return nil, fmt.Errorf("unsupported cipher suite: %v", cipherSuite)
 	}
 
 	rawExtensionsLength := utils.RawExtensionsLen(extensions)
 	if rawExtensionsLength > math.MaxUint16 {
 		return nil, fmt.Errorf("raw extensions cannot exceed %v bytes", math.MaxUint16)
 	}
+
 	seenExtensionTypes := make(map[spec.ExtensionType]bool)
 	possibleExtensions := spec.ExtensionTypes()
 	for _, extension := range extensions {
@@ -65,14 +52,12 @@ func NewClientHello(
 		seenExtensionTypes[extension.Type] = true
 	}
 
-	compressionMethods := []spec.CompressionMethod{spec.CompressionMethodNull}
-
-	return &spec.ClientHello{
-		ClientVersion:      spec.Tls12ProtocolVersion(),
-		Random:             utils.CopySlice(random),
-		SessionID:          utils.CopySlice(sessionId),
-		CipherSuites:       utils.CopySlice(cipherSuites),
-		CompressionMethods: compressionMethods,
-		Extensions:         utils.CopyExtensions(extensions),
+	return &spec.ServerHello{
+		ServerVersion:     spec.Tls12ProtocolVersion(),
+		Random:            utils.CopySlice(random),
+		SessionID:         utils.CopySlice(sessionId),
+		CipherSuite:       cipherSuite,
+		CompressionMethod: spec.CompressionMethodNull,
+		Extensions:        utils.CopyExtensions(extensions),
 	}, nil
 }

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/piligrimm/tls/shared/spec"
+	"github.com/piligrimm/tls/shared/utils"
 )
 
 func TestUnmarshalClientHello_ValidInput(t *testing.T) {
@@ -34,9 +35,8 @@ func TestUnmarshalClientHello_ValidInput(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	tls12ProtocolVersion := spec.Tls12ProtocolVersion()
-	if clientHello.ClientVersion.Major != tls12ProtocolVersion.Major || clientHello.ClientVersion.Minor != tls12ProtocolVersion.Minor {
-		t.Errorf("Expected TLS 1.2 version(3, 3), got %d.%d", clientHello.ClientVersion.Major, clientHello.ClientVersion.Minor)
+	if clientHello.ClientVersion != spec.Tls12ProtocolVersion() {
+		t.Errorf("Expected ServerVersion %v, got %v", spec.Tls12ProtocolVersion(), clientHello.ClientVersion)
 	}
 
 	expectedRandom := []byte{
@@ -112,12 +112,12 @@ func TestUnmarshalClientHello_ValidInput(t *testing.T) {
 		}
 	}
 
-	if len(clientHello.Compression) != 1 || clientHello.Compression[0] != 0x00 {
-		t.Errorf("Expected only null compression, got %x", clientHello.Compression)
+	if len(clientHello.CompressionMethods) != 1 || clientHello.CompressionMethods[0] != 0x00 {
+		t.Errorf("Expected only null compression, got %x", clientHello.CompressionMethods)
 	}
 
 	pointFormatsValues := []byte{byte(spec.ECPointFormatUncompressed)}
-	pointFormats, _ := NewOpaqueVector8(pointFormatsValues)
+	pointFormats, _ := utils.NewOpaqueVector8(pointFormatsValues)
 
 	supportedGroups := []byte{0x00, 0x08, 0x00, 0x1d, 0x00, 0x17, 0x00, 0x18, 0x00, 0x19}
 	signatureAlgorithms := []byte{0x00, 0x16, 0x08, 0x06, 0x06, 0x01, 0x06, 0x03, 0x08, 0x05, 0x05, 0x01, 0x05, 0x03, 0x08, 0x04, 0x04, 0x01, 0x04, 0x03, 0x02, 0x01, 0x02, 0x03}
@@ -157,15 +157,15 @@ func TestMarshalClientHello_ValidInput(t *testing.T) {
 	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
 
 	pointFormatsValues := []byte{byte(spec.ECPointFormatUncompressed)}
-	pointFormats, _ := NewOpaqueVector8(pointFormatsValues)
+	pointFormats, _ := utils.NewOpaqueVector8(pointFormatsValues)
 
 	supportedGroupsValues := make([]byte, 2)
 	binary.BigEndian.PutUint16(supportedGroupsValues, uint16(spec.SupportedGroupsSecp256r1))
-	supportedGroups, _ := NewOpaqueVector16(supportedGroupsValues)
+	supportedGroups, _ := utils.NewOpaqueVector16(supportedGroupsValues)
 
 	supportedSignatureAlgorithmsValues := make([]byte, 2)
 	binary.BigEndian.PutUint16(supportedSignatureAlgorithmsValues, uint16(spec.SignatureAlgorithmRsaPkcs1Sha256))
-	supportedSignatureAlgorithms, _ := NewOpaqueVector16(supportedSignatureAlgorithmsValues)
+	supportedSignatureAlgorithms, _ := utils.NewOpaqueVector16(supportedSignatureAlgorithmsValues)
 
 	extensions := []spec.Extension{
 		{

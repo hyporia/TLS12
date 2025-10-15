@@ -62,6 +62,7 @@ const (
 	CipherSuiteRSA_WITH_3DES_EDE_CBC_SHA            CipherSuite = 0x000a
 )
 
+// todo: move to client/server side from spec
 func SupportedCipherSuites() []CipherSuite {
 	return []CipherSuite{
 		CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256,

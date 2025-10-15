@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/piligrimm/tls/shared/spec"
+	"github.com/piligrimm/tls/shared/utils"
 )
 
 func MarshalClientHello(clientHello *spec.ClientHello) []byte {
@@ -23,10 +24,12 @@ func MarshalClientHello(clientHello *spec.ClientHello) []byte {
 		payload = append(payload, byte(cipherSuite>>8), byte(cipherSuite))
 	}
 
-	payload = append(payload, byte(len(clientHello.Compression)))
-	payload = append(payload, clientHello.Compression...)
+	payload = append(payload, byte(len(clientHello.CompressionMethods)))
+	for _, m := range clientHello.CompressionMethods {
+		payload = append(payload, byte(m))
+	}
 
-	ownExtensionsLength := extensionsLen(clientHello.Extensions)
+	ownExtensionsLength := utils.RawExtensionsLen(clientHello.Extensions)
 	if ownExtensionsLength == 0 {
 		return payload
 	}
@@ -67,7 +70,8 @@ func UnmarshalClientHello(raw []byte) (*spec.ClientHello, error) {
 	if err := need(2); err != nil {
 		return nil, err
 	}
-	protocolVersion, err := parseProtocolVersionFromRawPayload(raw[off : off+2])
+	// todo: validate that protocol version is tls 1.2
+	protocolVersion, err := utils.ParseProtocolVersionFromRawPayload(raw[off : off+2])
 	if err != nil {
 		return nil, err
 	}
@@ -126,12 +130,15 @@ func UnmarshalClientHello(raw []byte) (*spec.ClientHello, error) {
 	if err := need(compLen); err != nil {
 		return nil, err
 	}
-	compression := append([]byte(nil), raw[off:off+compLen]...)
+	compressionMethods := make([]spec.CompressionMethod, compLen)
+	for i := 0; i < compLen; i++ {
+		compressionMethods[i] = spec.CompressionMethod(raw[off+i])
+	}
 	off += compLen
 	// null(0) compression method is required in TLS 1.2
 	hasNull := false
-	for _, m := range compression {
-		if m == 0 {
+	for _, m := range compressionMethods {
+		if m == spec.CompressionMethodNull {
 			hasNull = true
 			break
 		}
@@ -172,25 +179,11 @@ func UnmarshalClientHello(raw []byte) (*spec.ClientHello, error) {
 	}
 
 	return &spec.ClientHello{
-		ClientVersion: *protocolVersion,
-		Random:        random,
-		SessionID:     sessionId,
-		CipherSuites:  cipherSuites,
-		Compression:   compression,
-		Extensions:    extensions,
+		ClientVersion:      *protocolVersion,
+		Random:             random,
+		SessionID:          sessionId,
+		CipherSuites:       cipherSuites,
+		CompressionMethods: compressionMethods,
+		Extensions:         extensions,
 	}, nil
-}
-
-func parseProtocolVersionFromRawPayload(rawPayload []byte) (*spec.ProtocolVersion, error) {
-	if len(rawPayload) != 2 {
-		return nil, fmt.Errorf("protocol payload has incorrect length")
-	}
-
-	tls12ProtocolVersion := spec.Tls12ProtocolVersion()
-
-	if rawPayload[0] != tls12ProtocolVersion.Major || rawPayload[1] != tls12ProtocolVersion.Minor {
-		return nil, fmt.Errorf("incorrect protocol version")
-	}
-
-	return &tls12ProtocolVersion, nil
 }
