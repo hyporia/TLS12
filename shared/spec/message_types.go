@@ -1,6 +1,6 @@
 package spec
 
-type MessageType uint16
+type MessageType byte
 
 const (
 	MessageTypeClientHello MessageType = 0x01
