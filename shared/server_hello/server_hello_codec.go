@@ -27,18 +27,11 @@ func MarshalServerHello(serverHello *spec.ServerHello) []byte {
 		return payload
 	}
 
-	rawExtensionsLength := make([]byte, 2)
-	binary.BigEndian.PutUint16(rawExtensionsLength, uint16(ownExtensionsLength))
-	payload = append(payload, rawExtensionsLength...)
+	payload = binary.BigEndian.AppendUint16(payload, uint16(ownExtensionsLength))
+
 	for _, extension := range serverHello.Extensions {
-		rawExtensionType := make([]byte, 2)
-		binary.BigEndian.PutUint16(rawExtensionType, uint16(extension.Type))
-		payload = append(payload, rawExtensionType...)
-
-		rawOpaqueLength := make([]byte, 2)
-		binary.BigEndian.PutUint16(rawOpaqueLength, uint16(len(extension.Opaque)))
-		payload = append(payload, rawOpaqueLength...)
-
+		payload = binary.BigEndian.AppendUint16(payload, uint16(extension.Type))
+		payload = binary.BigEndian.AppendUint16(payload, uint16(len(extension.Opaque)))
 		payload = append(payload, extension.Opaque...)
 	}
 

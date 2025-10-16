@@ -17,9 +17,8 @@ func MarshalClientHello(clientHello *spec.ClientHello) []byte {
 	payload = append(payload, byte(len(clientHello.SessionID)))
 	payload = append(payload, clientHello.SessionID...)
 
-	rawCipherSuiteLength := make([]byte, 2)
-	binary.BigEndian.PutUint16(rawCipherSuiteLength, uint16(2*len(clientHello.CipherSuites)))
-	payload = append(payload, rawCipherSuiteLength...)
+	payload = binary.BigEndian.AppendUint16(payload, uint16(2*len(clientHello.CipherSuites)))
+
 	for _, cipherSuite := range clientHello.CipherSuites {
 		payload = append(payload, byte(cipherSuite>>8), byte(cipherSuite))
 	}
@@ -38,14 +37,8 @@ func MarshalClientHello(clientHello *spec.ClientHello) []byte {
 	binary.BigEndian.PutUint16(rawExtensionsLength, uint16(ownExtensionsLength))
 	payload = append(payload, rawExtensionsLength...)
 	for _, extension := range clientHello.Extensions {
-		rawExtensionType := make([]byte, 2)
-		binary.BigEndian.PutUint16(rawExtensionType, uint16(extension.Type))
-		payload = append(payload, rawExtensionType...)
-
-		rawOpaqueLength := make([]byte, 2)
-		binary.BigEndian.PutUint16(rawOpaqueLength, uint16(len(extension.Opaque)))
-		payload = append(payload, rawOpaqueLength...)
-
+		payload = binary.BigEndian.AppendUint16(payload, uint16(extension.Type))
+		payload = binary.BigEndian.AppendUint16(payload, uint16(len(extension.Opaque)))
 		payload = append(payload, extension.Opaque...)
 	}
 
@@ -176,6 +169,7 @@ func UnmarshalClientHello(raw []byte) (*spec.ClientHello, error) {
 
 			extensions = append(extensions, spec.Extension{Type: extType, Opaque: opaque})
 		}
+		// todo: validate duplicate extensions
 	}
 
 	return &spec.ClientHello{
