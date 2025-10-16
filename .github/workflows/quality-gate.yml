@@ -53,6 +53,13 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      - name: Lint (golangci-lint)
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
+          working-directory: shared
+          args: --timeout=5m --config=../.golangci.yml
+
       - name: Generate test coverage (race)
         run: |
           go test ./... -race -coverprofile="$GITHUB_WORKSPACE/cover.out" -covermode=atomic -coverpkg=./... -count=1
@@ -61,13 +68,6 @@ jobs:
         uses: vladopajic/go-test-coverage@v2
         with:
           config: ./.testcoverage.yml
-
-      - name: Lint (golangci-lint)
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.1
-          working-directory: shared
-          args: --timeout=5m --config=../.golangci.yml
 
       - name: Security scan (gosec)
         uses: securego/gosec@master

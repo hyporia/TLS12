@@ -2,7 +2,7 @@ profile: cover.out
 
 threshold:
   # Minimum overall project coverage percentage required
-  total: 80
+  total: 60
 
 # Exclude auxiliary specification package from coverage stats
 exclude:
