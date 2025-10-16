@@ -40,7 +40,18 @@ cover-check:
 		echo "Coverage below threshold"; exit 1; }
 
 mod-tidy-check:
-	cd $(WORKDIR) && go mod tidy && git diff --exit-code --name-only go.mod go.sum
+	cd $(WORKDIR) && \
+	go mod tidy && \
+	changed=0; \
+	if ! git diff --quiet -- go.mod; then changed=1; fi; \
+	if [ -e go.sum ]; then \
+		if ! git ls-files --error-unmatch go.sum >/dev/null 2>&1; then changed=1; fi; \
+		if ! git diff --quiet -- go.sum; then changed=1; fi; \
+	fi; \
+	if [ "$$changed" -ne 0 ]; then \
+		echo "go.mod/go.sum are not tidy. Run 'go mod tidy'."; \
+		exit 1; \
+	fi
 
 clean:
 	rm -f $(COVERAGE_OUT) $(COVERAGE_TXT)

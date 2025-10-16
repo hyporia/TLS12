@@ -28,18 +28,28 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          # Use the latest stable Go; works with stdlib features used here.
           go-version: stable
           cache-dependency-path: |
             shared/go.sum
 
       - name: Verify module files are tidy
         run: |
+          set -e
           go mod tidy
-          git diff --exit-code --name-only go.mod go.sum || {
-            echo "go.mod/go.sum are not tidy. Run 'go mod tidy'.";
-            exit 1;
-          }
+          changed=0
+          # Check tracked changes in go.mod
+          if ! git diff --quiet -- go.mod; then changed=1; fi
+          # Handle go.sum if present; treat untracked creation as a change
+          if [ -e go.sum ]; then
+            if ! git ls-files --error-unmatch go.sum >/dev/null 2>&1; then changed=1; fi
+            if ! git diff --quiet -- go.sum; then changed=1; fi
+          fi
+          if [ "$changed" -ne 0 ]; then
+            echo "go.mod/go.sum are not tidy. Run 'go mod tidy'."
+            git status --porcelain -- go.mod go.sum || true
+            git --no-pager diff -- go.mod go.sum || true
+            exit 1
+          fi
 
       - name: Build
         run: go build ./...
