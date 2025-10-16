@@ -75,7 +75,7 @@ jobs:
           args: ./shared/...
 
       - name: Upload coverage artifact
-        if: always()
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: coverage
