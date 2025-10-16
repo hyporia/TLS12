@@ -1,0 +1,86 @@
+name: Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  # Minimum coverage percentage to pass the gate
+  COVERAGE_MIN: "80.0"
+
+jobs:
+  build-test-lint:
+    name: Build, Test, Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: shared
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          # Use the latest stable Go; works with stdlib features used here.
+          go-version: stable
+          cache-dependency-path: |
+            shared/go.sum
+
+      - name: Verify module files are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code --name-only go.mod go.sum || {
+            echo "go.mod/go.sum are not tidy. Run 'go mod tidy'.";
+            exit 1;
+          }
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Unit tests (race + coverage)
+        run: |
+          go test ./... -race -coverprofile=coverage.out -covermode=atomic -count=1
+          go tool cover -func=coverage.out | tee coverage.txt
+
+      - name: Enforce coverage threshold
+        shell: bash
+        run: |
+          set -euo pipefail
+          total=$(awk '/^total:/ {print $3}' coverage.txt | sed 's/%//')
+          min=${COVERAGE_MIN}
+          echo "Total coverage: ${total}% (required: ${min}%)"
+          awk -v t="$total" -v m="$min" 'BEGIN { exit (t + 0 >= m + 0 ? 0 : 1) }' || {
+            echo "Coverage below threshold";
+            exit 1;
+          }
+
+      - name: Lint (golangci-lint)
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
+          working-directory: shared
+          args: --timeout=5m --config=../.golangci.yml
+
+      - name: Security scan (gosec)
+        uses: securego/gosec@master
+        with:
+          args: ./shared/...
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            shared/coverage.out
+            shared/coverage.txt
