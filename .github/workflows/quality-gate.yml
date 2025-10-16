@@ -55,7 +55,7 @@ jobs:
 
       - name: Generate test coverage (race)
         run: |
-          go test ./... -race -coverprofile=./cover.out -covermode=atomic -coverpkg=./... -count=1
+          go test ./... -race -coverprofile="$GITHUB_WORKSPACE/cover.out" -covermode=atomic -coverpkg=./... -count=1
 
       - name: Check test coverage
         uses: vladopajic/go-test-coverage@v2
@@ -80,4 +80,4 @@ jobs:
         with:
           name: coverage
           path: |
-            shared/cover.out
+            cover.out

@@ -7,5 +7,4 @@ threshold:
 # Exclude auxiliary specification package from coverage stats
 exclude:
   paths:
-    - ^spec(/|$)
-
+    - ^shared/spec(/|$)
