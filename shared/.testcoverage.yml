@@ -1,0 +1,11 @@
+profile: cover.out
+
+threshold:
+  # Minimum overall project coverage percentage required
+  total: 80
+
+# Exclude auxiliary specification package from coverage stats
+exclude:
+  paths:
+    - ^spec(/|$)
+

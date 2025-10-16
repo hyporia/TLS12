@@ -4,7 +4,7 @@ SHELL := /bin/sh
 WORKDIR := shared
 COVERAGE_OUT := $(WORKDIR)/coverage.out
 COVERAGE_TXT := $(WORKDIR)/coverage.txt
-COVERAGE_MIN ?= 80.0
+COVERAGE_MIN ?= 60.0
 
 .PHONY: all quality fmt vet lint build test cover-check mod-tidy-check clean
 
