@@ -12,7 +12,7 @@ import (
 
 func NewServerHello(
 	random []byte,
-	sessionId []byte,
+	sessionID []byte,
 	cipherSuite spec.CipherSuite,
 	extensions []spec.Extension,
 ) (*spec.ServerHello, error) {
@@ -20,7 +20,7 @@ func NewServerHello(
 		return nil, errors.New("random must contain 32 bytes")
 	}
 
-	if len(sessionId) > 32 {
+	if len(sessionID) > 32 {
 		return nil, errors.New("session ID cannot be longer than 32 bytes")
 	}
 
@@ -55,7 +55,7 @@ func NewServerHello(
 	return &spec.ServerHello{
 		ServerVersion:     spec.Tls12ProtocolVersion(),
 		Random:            utils.CopySlice(random),
-		SessionID:         utils.CopySlice(sessionId),
+		SessionID:         utils.CopySlice(sessionID),
 		CipherSuite:       cipherSuite,
 		CompressionMethod: spec.CompressionMethodNull,
 		Extensions:        utils.CopyExtensions(extensions),

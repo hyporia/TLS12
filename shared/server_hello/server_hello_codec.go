@@ -76,7 +76,7 @@ func UnmarshalServerHello(serverHelloRaw []byte) (*spec.ServerHello, error) {
 		return nil, err
 	}
 
-	sessionId := append([]byte(nil), serverHelloRaw[off:off+sessionIdLength]...)
+	sessionID := append([]byte(nil), serverHelloRaw[off:off+sessionIdLength]...)
 	off += sessionIdLength
 
 	if err := need(2); err != nil {
@@ -127,7 +127,7 @@ func UnmarshalServerHello(serverHelloRaw []byte) (*spec.ServerHello, error) {
 	return &spec.ServerHello{
 		ServerVersion:     *protocolVersion,
 		Random:            random,
-		SessionID:         sessionId,
+		SessionID:         sessionID,
 		CipherSuite:       cipherSuite,
 		CompressionMethod: compressionMethod,
 		Extensions:        extensions,

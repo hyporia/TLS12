@@ -152,7 +152,7 @@ func TestMarshalClientHello_ValidInput(t *testing.T) {
 		0xf9, 0x5c, 0x38, 0xba, 0x2a, 0x6a, 0x31, 0x16,
 	}
 
-	sessionId := []byte(nil)
+	sessionID := []byte(nil)
 
 	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
 
@@ -186,7 +186,7 @@ func TestMarshalClientHello_ValidInput(t *testing.T) {
 		},
 	}
 
-	clientHello, err := NewClientHello(random, sessionId, cipherSuites, extensions)
+	clientHello, err := NewClientHello(random, sessionID, cipherSuites, extensions)
 
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)

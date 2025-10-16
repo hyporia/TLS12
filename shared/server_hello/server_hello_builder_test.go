@@ -15,12 +15,12 @@ func TestCreateServerHello_ValidInput(t *testing.T) {
 	random := make([]byte, 32)
 	rand.Read(random)
 	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix())) // Valid timestamp
-	sessionId := []byte{0x01, 0x02}
+	sessionID := []byte{0x01, 0x02}
 	cipherSuite := spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256
 	extensions := []spec.Extension{}
 
 	// Act
-	serverHello, err := NewServerHello(random, sessionId, cipherSuite, extensions)
+	serverHello, err := NewServerHello(random, sessionID, cipherSuite, extensions)
 
 	// Assert
 	if err != nil {
@@ -49,12 +49,12 @@ func TestCreateServerHello_ValidInput(t *testing.T) {
 func TestCreateServerHello_InvalidRandomLength(t *testing.T) {
 	// Arrange
 	random := make([]byte, 31) // Too short
-	sessionId := []byte{}
+	sessionID := []byte{}
 	cipherSuite := spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256
 	extensions := []spec.Extension{}
 
 	// Act
-	_, err := NewServerHello(random, sessionId, cipherSuite, extensions)
+	_, err := NewServerHello(random, sessionID, cipherSuite, extensions)
 
 	// Assert
 	if err == nil {
@@ -68,12 +68,12 @@ func TestCreateServerHello_InvalidRandomLength(t *testing.T) {
 func TestCreateServerHello_UnsupportedCipherSuite(t *testing.T) {
 	// Arrange
 	random := make([]byte, 32)
-	sessionId := []byte{}
+	sessionID := []byte{}
 	cipherSuite := spec.CipherSuite(0x1337) // Invalid
 	extensions := []spec.Extension{}
 
 	// Act
-	_, err := NewServerHello(random, sessionId, cipherSuite, extensions)
+	_, err := NewServerHello(random, sessionID, cipherSuite, extensions)
 
 	// Assert
 	if err == nil {
@@ -88,12 +88,12 @@ func TestCreateServerHello_UnsupportedCipherSuite(t *testing.T) {
 func TestCreateServerHello_SessionIdTooLong(t *testing.T) {
 	// Arrange
 	random := make([]byte, 32)
-	sessionId := make([]byte, 33) // Too long - exceeds 32 bytes
+	sessionID := make([]byte, 33) // Too long - exceeds 32 bytes
 	cipherSuite := spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256
 	extensions := []spec.Extension{}
 
 	// Act
-	_, err := NewServerHello(random, sessionId, cipherSuite, extensions)
+	_, err := NewServerHello(random, sessionID, cipherSuite, extensions)
 
 	// Assert
 	if err == nil {
@@ -109,7 +109,7 @@ func TestCreateServerHello_SessionIdTooLong(t *testing.T) {
 func TestCreateServerHello_DuplicateExtension(t *testing.T) {
 	// Arrange
 	random := make([]byte, 32)
-	sessionId := []byte{}
+	sessionID := []byte{}
 	cipherSuite := spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256
 	extensions := []spec.Extension{
 		{Type: spec.ExtensionTypeServerName, Opaque: []byte{}},
@@ -117,7 +117,7 @@ func TestCreateServerHello_DuplicateExtension(t *testing.T) {
 	}
 
 	// Act
-	_, err := NewServerHello(random, sessionId, cipherSuite, extensions)
+	_, err := NewServerHello(random, sessionID, cipherSuite, extensions)
 
 	// Assert
 	if err == nil {
@@ -131,14 +131,14 @@ func TestCreateServerHello_DuplicateExtension(t *testing.T) {
 func TestCreateServerHello_UnsupportedExtension(t *testing.T) {
 	// Arrange
 	random := make([]byte, 32)
-	sessionId := []byte{}
+	sessionID := []byte{}
 	cipherSuite := spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256
 	extensions := []spec.Extension{
 		{Type: spec.ExtensionType(0x1337), Opaque: []byte{}}, // Unknown type
 	}
 
 	// Act
-	_, err := NewServerHello(random, sessionId, cipherSuite, extensions)
+	_, err := NewServerHello(random, sessionID, cipherSuite, extensions)
 
 	// Assert
 	if err == nil {

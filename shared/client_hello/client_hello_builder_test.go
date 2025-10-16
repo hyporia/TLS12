@@ -12,12 +12,12 @@ func TestCreateClientHello_ValidInput(t *testing.T) {
 	// Arrange
 	random := make([]byte, 32)
 	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix())) // Valid timestamp
-	sessionId := []byte{0x01, 0x02}
+	sessionID := []byte{0x01, 0x02}
 	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
 	extensions := []spec.Extension{}
 
 	// Act
-	clientHello, err := NewClientHello(random, sessionId, cipherSuites, extensions)
+	clientHello, err := NewClientHello(random, sessionID, cipherSuites, extensions)
 
 	// Assert
 	if err != nil {
@@ -43,12 +43,12 @@ func TestCreateClientHello_ValidInput(t *testing.T) {
 func TestCreateClientHello_InvalidRandomLength(t *testing.T) {
 	// Arrange
 	random := make([]byte, 31) // Too short
-	sessionId := []byte{}
+	sessionID := []byte{}
 	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_CBC_SHA}
 	extensions := []spec.Extension{}
 
 	// Act
-	_, err := NewClientHello(random, sessionId, cipherSuites, extensions)
+	_, err := NewClientHello(random, sessionID, cipherSuites, extensions)
 
 	// Assert
 	if err == nil {
@@ -63,12 +63,12 @@ func TestCreateClientHello_UnsupportedCipherSuite(t *testing.T) {
 	// Arrange
 	random := make([]byte, 32)
 	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix()))
-	sessionId := []byte{}
+	sessionID := []byte{}
 	cipherSuites := []spec.CipherSuite{spec.CipherSuite(0x1337)} // Invalid
 	extensions := []spec.Extension{}
 
 	// Act
-	_, err := NewClientHello(random, sessionId, cipherSuites, extensions)
+	_, err := NewClientHello(random, sessionID, cipherSuites, extensions)
 
 	// Assert
 	if err == nil {
@@ -84,7 +84,7 @@ func TestCreateClientHello_DuplicateExtension(t *testing.T) {
 	// Arrange
 	random := make([]byte, 32)
 	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix()))
-	sessionId := []byte{}
+	sessionID := []byte{}
 	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
 	extensions := []spec.Extension{
 		{Type: spec.ExtensionTypeServerName, Opaque: []byte{}},
@@ -92,7 +92,7 @@ func TestCreateClientHello_DuplicateExtension(t *testing.T) {
 	}
 
 	// Act
-	_, err := NewClientHello(random, sessionId, cipherSuites, extensions)
+	_, err := NewClientHello(random, sessionID, cipherSuites, extensions)
 
 	// Assert
 	if err == nil {
@@ -107,14 +107,14 @@ func TestCreateClientHello_UnsupportedExtension(t *testing.T) {
 	// Arrange
 	random := make([]byte, 32)
 	binary.BigEndian.PutUint32(random[:4], uint32(time.Now().Unix()))
-	sessionId := []byte{}
+	sessionID := []byte{}
 	cipherSuites := []spec.CipherSuite{spec.CipherSuiteECDHE_RSA_WITH_AES_128_GCM_SHA256}
 	extensions := []spec.Extension{
 		{Type: spec.ExtensionType(0x1337), Opaque: []byte{}}, // Unknown type
 	}
 
 	// Act
-	_, err := NewClientHello(random, sessionId, cipherSuites, extensions)
+	_, err := NewClientHello(random, sessionID, cipherSuites, extensions)
 
 	// Assert
 	if err == nil {

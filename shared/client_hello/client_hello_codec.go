@@ -89,7 +89,7 @@ func UnmarshalClientHello(raw []byte) (*spec.ClientHello, error) {
 	if err := need(sidLen); err != nil {
 		return nil, err
 	}
-	sessionId := append([]byte(nil), raw[off:off+sidLen]...)
+	sessionID := append([]byte(nil), raw[off:off+sidLen]...)
 	off += sidLen
 
 	// cipher_suites
@@ -175,7 +175,7 @@ func UnmarshalClientHello(raw []byte) (*spec.ClientHello, error) {
 	return &spec.ClientHello{
 		ClientVersion:      *protocolVersion,
 		Random:             random,
-		SessionID:          sessionId,
+		SessionID:          sessionID,
 		CipherSuites:       cipherSuites,
 		CompressionMethods: compressionMethods,
 		Extensions:         extensions,
