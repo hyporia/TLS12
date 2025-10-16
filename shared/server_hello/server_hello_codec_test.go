@@ -46,9 +46,9 @@ func TestMarshalServerHello_ValidInput(t *testing.T) {
 		t.Fatalf("raw server hello length mismatch: expected %v, got %v", len(expectedRawServerHello), len(rawServerHello))
 	}
 
-	for i := range len(expectedRawServerHello) {
+	for i := range expectedRawServerHello {
 		if rawServerHello[i] != expectedRawServerHello[i] {
-			t.Fatalf("raw client hello mismatch at index %v: expected %v, got %v", i, expectedRawServerHello[i], rawServerHello[i])
+			t.Fatalf("raw server hello mismatch at index %v: expected %v, got %v", i, expectedRawServerHello[i], rawServerHello[i])
 		}
 	}
 }
@@ -107,7 +107,7 @@ func TestUnmarshalServerHello_ValidInput(t *testing.T) {
 		t.Errorf("unexpected number of extensions: %d", len(serverHello.Extensions))
 	}
 
-	for i, ext := range serverHello.Extensions {
+	for i, ext := range expectedExtensions {
 		got := serverHello.Extensions[i]
 		if got.Type != ext.Type {
 			t.Fatalf("Extension type mismatch at index %d: expected %v, got %v", i, ext.Type, got.Type)
