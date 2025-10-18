@@ -6,7 +6,7 @@ linters:
     - gocritic
     - misspell
     - prealloc
-    - revive
+    # - revive // todo: enable when I'm ready to add comments
     - staticcheck
     - unparam
   disable:
