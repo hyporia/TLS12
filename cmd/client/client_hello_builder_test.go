@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/piligrimm/tls/shared/spec"
+	"github.com/piligrimm/tls/spec"
 )
 
 func TestCreateClientHello_ValidInput(t *testing.T) {

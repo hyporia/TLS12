@@ -3,7 +3,7 @@ package utils
 import (
 	"slices"
 
-	"github.com/piligrimm/tls/shared/spec"
+	"github.com/piligrimm/tls/spec"
 )
 
 func rawExtensionLen(extension spec.Extension) int {

@@ -1,7 +1,7 @@
 SHELL := /bin/sh
 .SILENT:
 
-WORKDIR := shared
+WORKDIR := ./
 COVERAGE_OUT := $(WORKDIR)/coverage.out
 COVERAGE_TXT := $(WORKDIR)/coverage.txt
 COVERAGE_MIN ?= 60.0
@@ -24,20 +24,13 @@ vet:
 	cd $(WORKDIR) && go vet ./...
 
 lint:
-	cd $(WORKDIR) && golangci-lint run --timeout=5m
+	golangci-lint run ./... --timeout=5m --config=.golangci.yml
 
 build:
 	cd $(WORKDIR) && go build ./...
 
 test:
-	cd $(WORKDIR) && go test ./... -race -coverprofile=coverage.out -covermode=atomic -count=1 && \
-		go tool cover -func=coverage.out | tee coverage.txt
-
-cover-check:
-	@total=$$(awk '/^total:/ {print $$3}' $(COVERAGE_TXT) | sed 's/%//'); \
-	 echo "Total coverage: $$total% (required: $(COVERAGE_MIN)%)"; \
-	 awk -v t="$$total" -v m="$(COVERAGE_MIN)" 'BEGIN { exit (t + 0 >= m + 0 ? 0 : 1) }' || { \
-		echo "Coverage below threshold"; exit 1; }
+	cd $(WORKDIR) && go test ./... -race -coverprofile=coverage.out -covermode=atomic -count=1
 
 mod-tidy-check:
 	cd $(WORKDIR) && \

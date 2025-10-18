@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/piligrimm/tls/shared/spec"
-	"github.com/piligrimm/tls/shared/utils"
+	"github.com/piligrimm/tls/internal/utils"
+	"github.com/piligrimm/tls/spec"
 )
 
 func MarshalClientHello(clientHello *spec.ClientHello) []byte {

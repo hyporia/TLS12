@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/piligrimm/tls/shared/spec"
+	"github.com/piligrimm/tls/spec"
 )
 
 func TestMarshalServerHello_ValidInput(t *testing.T) {

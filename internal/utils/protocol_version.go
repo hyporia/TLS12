@@ -3,7 +3,7 @@ package utils
 import (
 	"fmt"
 
-	"github.com/piligrimm/tls/shared/spec"
+	"github.com/piligrimm/tls/spec"
 )
 
 func ParseProtocolVersionFromRawPayload(rawProtocolVersion []byte) (*spec.ProtocolVersion, error) {

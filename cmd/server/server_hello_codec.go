@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/piligrimm/tls/shared/spec"
-	"github.com/piligrimm/tls/shared/utils"
+	"github.com/piligrimm/tls/internal/utils"
+	"github.com/piligrimm/tls/spec"
 )
 
 func MarshalServerHello(serverHello *spec.ServerHello) []byte {

@@ -14,9 +14,6 @@ jobs:
   build-test-lint:
     name: Build, Test, Lint
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: shared
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,7 +23,7 @@ jobs:
         with:
           go-version: stable
           cache-dependency-path: |
-            shared/go.sum
+            go.sum
 
       - name: Verify module files are tidy
         run: |
@@ -57,8 +54,7 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           version: v2.5.0
-          working-directory: shared
-          args: --timeout=5m --config=../.golangci.yml
+          args: --timeout=5m --config=.golangci.yml
 
       - name: Generate test coverage (race)
         run: |
@@ -72,7 +68,7 @@ jobs:
       - name: Security scan (gosec)
         uses: securego/gosec@master
         with:
-          args: ./shared/...
+          args: ./...
 
       - name: Upload coverage artifact
         if: github.ref == 'refs/heads/main'

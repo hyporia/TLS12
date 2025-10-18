@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/piligrimm/tls/shared/spec"
-	"github.com/piligrimm/tls/shared/utils"
+	"github.com/piligrimm/tls/internal/utils"
+	"github.com/piligrimm/tls/spec"
 )
 
 func TestUnmarshalClientHello_ValidInput(t *testing.T) {
