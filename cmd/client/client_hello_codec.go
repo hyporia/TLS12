@@ -14,10 +14,10 @@ func MarshalClientHello(clientHello *spec.ClientHello) []byte {
 
 	payload = append(payload, clientHello.Random...)
 
-	payload = append(payload, byte(len(clientHello.SessionID)))
+	payload = append(payload, utils.CastUint8OrPanic(len(clientHello.SessionID)))
 	payload = append(payload, clientHello.SessionID...)
 
-	payload = binary.BigEndian.AppendUint16(payload, uint16(2*len(clientHello.CipherSuites)))
+	payload = binary.BigEndian.AppendUint16(payload, utils.CastUint16OrPanic(2*len(clientHello.CipherSuites)))
 
 	for _, cipherSuite := range clientHello.CipherSuites {
 		payload = append(payload, byte(cipherSuite>>8), byte(cipherSuite))
@@ -33,12 +33,10 @@ func MarshalClientHello(clientHello *spec.ClientHello) []byte {
 		return payload
 	}
 
-	rawExtensionsLength := make([]byte, 2)
-	binary.BigEndian.PutUint16(rawExtensionsLength, uint16(ownExtensionsLength))
-	payload = append(payload, rawExtensionsLength...)
+	payload = binary.BigEndian.AppendUint16(payload, utils.CastUint16OrPanic((ownExtensionsLength)))
 	for _, extension := range clientHello.Extensions {
 		payload = binary.BigEndian.AppendUint16(payload, uint16(extension.Type))
-		payload = binary.BigEndian.AppendUint16(payload, uint16(len(extension.Opaque)))
+		payload = binary.BigEndian.AppendUint16(payload, utils.CastUint16OrPanic(len(extension.Opaque)))
 		payload = append(payload, extension.Opaque...)
 	}
 
