@@ -1,4 +1,4 @@
-package client_hello
+package main
 
 import (
 	"encoding/binary"
@@ -8,7 +8,7 @@ import (
 	"github.com/piligrimm/tls/spec"
 )
 
-func MarshalClientHello(clientHello *spec.ClientHello) []byte {
+func marshalClientHello(clientHello *spec.ClientHello) []byte {
 	payload := []byte{}
 	payload = append(payload, clientHello.ClientVersion.Major, clientHello.ClientVersion.Minor)
 
@@ -43,7 +43,7 @@ func MarshalClientHello(clientHello *spec.ClientHello) []byte {
 	return payload
 }
 
-func UnmarshalClientHello(raw []byte) (*spec.ClientHello, error) {
+func unmarshalClientHello(raw []byte) (*spec.ClientHello, error) {
 	const minLen = 41
 	if len(raw) < minLen {
 		return nil, fmt.Errorf("raw payload too short to be a valid ClientHello")

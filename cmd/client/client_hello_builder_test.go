@@ -1,4 +1,4 @@
-package client_hello
+package main
 
 import (
 	"encoding/binary"
@@ -17,7 +17,7 @@ func TestCreateClientHello_ValidInput(t *testing.T) {
 	extensions := []spec.Extension{}
 
 	// Act
-	clientHello, err := NewClientHello(random, sessionID, cipherSuites, extensions)
+	clientHello, err := newClientHello(random, sessionID, cipherSuites, extensions)
 
 	// Assert
 	if err != nil {
@@ -48,7 +48,7 @@ func TestCreateClientHello_InvalidRandomLength(t *testing.T) {
 	extensions := []spec.Extension{}
 
 	// Act
-	_, err := NewClientHello(random, sessionID, cipherSuites, extensions)
+	_, err := newClientHello(random, sessionID, cipherSuites, extensions)
 
 	// Assert
 	if err == nil {
@@ -68,7 +68,7 @@ func TestCreateClientHello_UnsupportedCipherSuite(t *testing.T) {
 	extensions := []spec.Extension{}
 
 	// Act
-	_, err := NewClientHello(random, sessionID, cipherSuites, extensions)
+	_, err := newClientHello(random, sessionID, cipherSuites, extensions)
 
 	// Assert
 	if err == nil {
@@ -92,7 +92,7 @@ func TestCreateClientHello_DuplicateExtension(t *testing.T) {
 	}
 
 	// Act
-	_, err := NewClientHello(random, sessionID, cipherSuites, extensions)
+	_, err := newClientHello(random, sessionID, cipherSuites, extensions)
 
 	// Assert
 	if err == nil {
@@ -114,7 +114,7 @@ func TestCreateClientHello_UnsupportedExtension(t *testing.T) {
 	}
 
 	// Act
-	_, err := NewClientHello(random, sessionID, cipherSuites, extensions)
+	_, err := newClientHello(random, sessionID, cipherSuites, extensions)
 
 	// Assert
 	if err == nil {

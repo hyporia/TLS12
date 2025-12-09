@@ -1,4 +1,4 @@
-package server_hello
+package main
 
 import (
 	"encoding/binary"
@@ -18,7 +18,7 @@ func MarshalServerHello(serverHello *spec.ServerHello) []byte {
 	payload = append(payload, byte(len(serverHello.SessionID)))
 	payload = append(payload, serverHello.SessionID...)
 
-	payload = append(payload, byte(serverHello.CipherSuite>>8), byte(serverHello.CipherSuite))
+	payload = binary.BigEndian.AppendUint16(payload, uint16(serverHello.CipherSuite))
 
 	payload = append(payload, byte(serverHello.CompressionMethod))
 

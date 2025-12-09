@@ -1,4 +1,4 @@
-package server_hello
+package main
 
 import (
 	"errors"

@@ -1,4 +1,4 @@
-package client_hello
+package main
 
 import (
 	"bytes"
@@ -29,7 +29,7 @@ func TestUnmarshalClientHello_ValidInput(t *testing.T) {
 		0x03, 0x02, 0x01, 0x02, 0x03,
 	}
 
-	clientHello, err := UnmarshalClientHello(rawPayload)
+	clientHello, err := unmarshalClientHello(rawPayload)
 
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
@@ -186,13 +186,13 @@ func TestMarshalClientHello_ValidInput(t *testing.T) {
 		},
 	}
 
-	clientHello, err := NewClientHello(random, sessionID, cipherSuites, extensions)
+	clientHello, err := newClientHello(random, sessionID, cipherSuites, extensions)
 
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	rawClientHello := MarshalClientHello(clientHello)
+	rawClientHello := marshalClientHello(clientHello)
 
 	expectedRawClientHello := []byte{
 		0x03, 0x03, 0x6f, 0x98, 0x03, 0x8c, 0x08, 0x3e, 0xa1, 0x51, 0x38, 0x1e,

@@ -1,4 +1,4 @@
-package client_hello
+package main
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 	"github.com/piligrimm/tls/spec"
 )
 
-func NewClientHello(
+func newClientHello(
 	random []byte,
 	sessionID []byte,
 	cipherSuites []spec.CipherSuite,
