@@ -7,7 +7,7 @@ import (
 	"github.com/piligrimm/tls/spec"
 )
 
-func UnmarshalServerCertificate(raw []byte) (*spec.ServerCertificate, error) {
+func unmarshalServerCertificate(raw []byte) (*spec.ServerCertificate, error) {
 	checkOffset := func(required int) error {
 		if required < 0 || len(raw) < required+3 {
 			return fmt.Errorf("truncated ServerCertificate at offset %d", required)
@@ -19,7 +19,6 @@ func UnmarshalServerCertificate(raw []byte) (*spec.ServerCertificate, error) {
 		return nil, err
 	}
 	totalCertLength := int(raw[0])<<16 | int(raw[1])<<8 | int(raw[2])
-	fmt.Printf("Total certificates length: %d bytes\n", totalCertLength)
 
 	if err := checkOffset(totalCertLength - 3); err != nil {
 		return nil, err
