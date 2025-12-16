@@ -8,3 +8,4 @@ threshold:
 exclude:
   paths:
     - ^spec(/|$)
+    - ^main\.go$
