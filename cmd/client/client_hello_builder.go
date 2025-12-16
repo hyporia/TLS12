@@ -68,7 +68,7 @@ func newClientHello(
 	compressionMethods := []spec.CompressionMethod{spec.CompressionMethodNull}
 
 	return &spec.ClientHello{
-		ClientVersion:      spec.Tls12ProtocolVersion(),
+		ClientTlsVersion:   spec.Tls12ProtocolVersion(),
 		Random:             utils.CopySlice(random),
 		SessionID:          utils.CopySlice(sessionID),
 		CipherSuites:       utils.CopySlice(cipherSuites),

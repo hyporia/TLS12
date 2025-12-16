@@ -1,7 +1,7 @@
 package spec
 
 type ClientHello struct {
-	ClientVersion      ProtocolVersion
+	ClientTlsVersion   ProtocolVersion
 	Random             []byte
 	SessionID          []byte
 	CipherSuites       []CipherSuite

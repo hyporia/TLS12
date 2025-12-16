@@ -22,7 +22,7 @@ func TestMarshalServerHello_ValidInput(t *testing.T) {
 	}
 
 	serverHello := spec.ServerHello{
-		ServerVersion:     spec.Tls12ProtocolVersion(),
+		ServerTlsVersion:  spec.Tls12ProtocolVersion(),
 		Random:            random,
 		SessionID:         []byte(nil),
 		CipherSuite:       spec.CipherSuiteECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
@@ -70,8 +70,8 @@ func TestUnmarshalServerHello_ValidInput(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	if serverHello.ServerVersion != spec.Tls12ProtocolVersion() {
-		t.Errorf("Expected ServerVersion %v, got %v", spec.Tls12ProtocolVersion(), serverHello.ServerVersion)
+	if serverHello.ServerTlsVersion != spec.Tls12ProtocolVersion() {
+		t.Errorf("Expected ServerVersion %v, got %v", spec.Tls12ProtocolVersion(), serverHello.ServerTlsVersion)
 	}
 
 	if len(serverHello.SessionID) > 0 {

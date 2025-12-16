@@ -53,7 +53,7 @@ func NewServerHello(
 	}
 
 	return &spec.ServerHello{
-		ServerVersion:     spec.Tls12ProtocolVersion(),
+		ServerTlsVersion:  spec.Tls12ProtocolVersion(),
 		Random:            utils.CopySlice(random),
 		SessionID:         utils.CopySlice(sessionID),
 		CipherSuite:       cipherSuite,

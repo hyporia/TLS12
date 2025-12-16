@@ -35,8 +35,8 @@ func TestUnmarshalClientHello_ValidInput(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	if clientHello.ClientVersion != spec.Tls12ProtocolVersion() {
-		t.Errorf("Expected ServerVersion %v, got %v", spec.Tls12ProtocolVersion(), clientHello.ClientVersion)
+	if clientHello.ClientTlsVersion != spec.Tls12ProtocolVersion() {
+		t.Errorf("Expected ServerVersion %v, got %v", spec.Tls12ProtocolVersion(), clientHello.ClientTlsVersion)
 	}
 
 	expectedRandom := []byte{

@@ -10,7 +10,7 @@ import (
 
 func marshalClientHello(clientHello *spec.ClientHello) []byte {
 	payload := []byte{}
-	payload = append(payload, clientHello.ClientVersion.Major, clientHello.ClientVersion.Minor)
+	payload = append(payload, clientHello.ClientTlsVersion.Major, clientHello.ClientTlsVersion.Minor)
 
 	payload = append(payload, clientHello.Random...)
 
@@ -171,7 +171,7 @@ func unmarshalClientHello(raw []byte) (*spec.ClientHello, error) {
 	}
 
 	return &spec.ClientHello{
-		ClientVersion:      *protocolVersion,
+		ClientTlsVersion:   *protocolVersion,
 		Random:             random,
 		SessionID:          sessionID,
 		CipherSuites:       cipherSuites,

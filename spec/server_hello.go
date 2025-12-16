@@ -1,7 +1,7 @@
 package spec
 
 type ServerHello struct {
-	ServerVersion     ProtocolVersion
+	ServerTlsVersion  ProtocolVersion
 	Random            []byte
 	SessionID         []byte
 	CipherSuite       CipherSuite
