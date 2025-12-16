@@ -2,7 +2,7 @@ package main
 
 import "net"
 
-func main() {
+func main() { // coverage-ignore
 	listener, err := net.Listen("tcp", ":6969")
 
 	if err != nil {
